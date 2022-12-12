@@ -10,10 +10,9 @@ namespace gameEngine {
 	class Camera : public Positioned, public Texturable {
 		private:
 			Dimensioni windowSize;
-			void drawRect(Pointf topLeft, Dimensionf size, Color3f color);
 			Pointf transformPoint(Pointf p);
 			Positioned* toFollow = NULL;
-			float followSpeed = 10.0f;
+			float followSpeed = 10.0;
 		public:
 			Camera();
 			Dimensioni getWindowSize();

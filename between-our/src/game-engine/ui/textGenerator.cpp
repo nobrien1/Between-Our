@@ -6,7 +6,7 @@
 #include "uiHeader.h"
 #include "textGenerator.h"
 
-const char* FONT_PATH = "C:/Users/omgna/source/repos/Between Our/Between Our/assets/fonts/font.ttf";
+const char* FONT_PATH = "./assets/fonts/font.ttf";
 
 namespace gameEngine {
 	FT_Library library;

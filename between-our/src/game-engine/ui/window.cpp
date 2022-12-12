@@ -107,7 +107,6 @@ namespace gameEngine {
 
 			while (!glfwWindowShouldClose(window)) {
 				double delta = glfwGetTime();
-
 				glfwSetTime(0);
 				
 				callKeyBinds(delta);

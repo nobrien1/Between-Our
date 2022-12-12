@@ -10,10 +10,6 @@
 #include "ui/uiHeader.h"
 
 namespace gameEngine {
-	void Camera::drawRect(Pointf topLeft, Dimensionf size, Color3f color) {
-		Pointf p(topLeft.x - position.x, topLeft.y - position.y);
-		window::drawRect(p, size, color);
-	}
 
 	Pointf Camera::transformPoint(Pointf p)
 	{
