@@ -194,6 +194,8 @@ namespace gameEngine {
 
     Texture* createAlivePlayerTexture(PlayerColor color)
     {
+        return new ColorSquare(Color3f(0, 0, 0));
+
         PolyTexture* texture = new PolyTexture();
         Color3f color3f = getColor3f(color);
 
@@ -207,6 +209,8 @@ namespace gameEngine {
     }
     Texture* createWalkingPlayerTexture(PlayerColor color)
     {
+        return new ColorSquare(Color3f(0, 0, 0));
+
         AnimatedTexture* texture = new AnimatedTexture();
         PolyTexture* t1 = new PolyTexture(); 
         PolyTexture* t2 = new PolyTexture();
@@ -231,6 +235,8 @@ namespace gameEngine {
     }
     Texture* createDeadPlayerTexture(PlayerColor color)
     {
+        return new ColorSquare(Color3f(0, 0, 0));
+
         PolyTexture* texture = new PolyTexture();
         Color3f color3f = getColor3f(color);
 

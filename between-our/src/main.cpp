@@ -13,7 +13,7 @@ using namespace gameEngine::ui;
 using namespace gameEngine;
 
 TextInput nameInput(Pointf(-1920 / 4 + 30, 1080 / 4 - 50), "Enter name");
-char* nameInputVal = {};
+const char* nameInputVal = " ";
 Button goButton(Pointf(-50, 0), Dimensionf(100, 50));
 Text goText(Pointf(10, 10), "Start");
 
@@ -60,9 +60,16 @@ int main() {
 	goButton.setOnPress([](int button, bool action) -> void {
 		p1.setName(nameInputVal);
 		window::navigate(&screen);
+
 		window::setRenderCallback([](double delta) -> void {
 			world.gameTick(delta);
 			camera.gameTick(delta);
+
+			for (int i = 0; i < 90; i++) {
+				int r = rand() % 10 - 5;
+				PolarPointf pp(100 + r, i * 4);
+				points[i].setPosition(toPointf(pp));
+			}
 
 			/*if (p1.isInRange(&p2) && !p2.isDead()) {
 				canKill.setVisible(true);
@@ -73,12 +80,12 @@ int main() {
 		});
 	});
 
-	nameInput.setOnChangeText([](char* text) -> void {
+	/*nameInput.setOnChangeText([](char* text) -> void {
 		nameInputVal = text;
-		});
+		});*/
 
 	initialScreen.addUiElement(&goButton);
-	initialScreen.addUiElement(&nameInput);
+	//initialScreen.addUiElement(&nameInput);
 
 	//p2.setPlayerColor(BLUE);
 
@@ -141,8 +148,6 @@ int main() {
 		//if (p1.isInRange(&p2)) p1.attemptToKill(&p2);
 		});
 
-	
-	screen.addUiElement(&canKill);
 
 	window::navigate(&initialScreen);
 
