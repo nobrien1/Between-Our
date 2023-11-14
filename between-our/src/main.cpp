@@ -25,12 +25,32 @@ int following = 1;
 World world(500, 500);
 
 Player p1("");
-
-Player p2("Player 2");
+WorldObject points[90];
 
 GameScreen screen(&world, &camera);
 
 Text canKill(Pointf(-1920/4 + 30, 1080/4 - 40), "Kill (f)");
+
+PolarPointf toPolarPointf(float x, float y) {
+	float r = sqrt(x * x + y * y);
+	float theta = atan(y / x);
+	if (x < 0) theta += 180;
+	return PolarPointf(r, theta);
+}
+
+PolarPointf toPolarPointf(Pointf p) {
+	return toPolarPointf(p.x, p.y);
+}
+
+Pointf toPointf(float r, float theta) {
+	float x = r * cos(theta * 3.14 / 180);
+	float y = r * sin(theta * 3.14 / 180);
+	return Pointf(x, y);
+}
+
+Pointf toPointf(PolarPointf p) {
+	return toPointf(p.r, p.theta);
+}
 
 int main() {
 	ViewStyle btnStyle;
@@ -44,12 +64,12 @@ int main() {
 			world.gameTick(delta);
 			camera.gameTick(delta);
 
-			if (p1.isInRange(&p2) && !p2.isDead()) {
+			/*if (p1.isInRange(&p2) && !p2.isDead()) {
 				canKill.setVisible(true);
 			}
 			else {
 				canKill.setVisible(false);
-			}
+			}*/
 		});
 	});
 
@@ -60,10 +80,21 @@ int main() {
 	initialScreen.addUiElement(&goButton);
 	initialScreen.addUiElement(&nameInput);
 
-	p2.setPlayerColor(BLUE);
+	//p2.setPlayerColor(BLUE);
 
 	world.addWorldObject(&p1);
-	world.addWorldObject(&p2);
+	//world.addWorldObject(&p2);
+
+	ColorSquare pointTexture(Color3f(1, 1, 1));
+
+	for (int i = 0; i < 90; i++) {
+		PolarPointf polar(i, i * 4);
+		Pointf p = toPointf(polar);
+		points[i].setPosition(p);
+		points[i].setSize(2, 2);
+		points[i].setTexture(&pointTexture);
+		world.addWorldObject(&(points[i]));
+	}
 
 	camera.follow(&p1);
 
@@ -81,20 +112,20 @@ int main() {
 	});
 
 	screen.setKeyPress(GLFW_KEY_UP, [](bool action) -> void {
-		p2.setMovingUp(action);
+		// p2.setMovingUp(action);
 		});
 	screen.setKeyPress(GLFW_KEY_LEFT, [](bool action) -> void {
-		p2.setMovingLeft(action);
+		// p2.setMovingLeft(action);
 		});
 	screen.setKeyPress(GLFW_KEY_DOWN, [](bool action) -> void {
-		p2.setMovingDown(action);
+		// p2.setMovingDown(action);
 		});
 	screen.setKeyPress(GLFW_KEY_RIGHT, [](bool action) -> void {
-		p2.setMovingRight(action);
+		// p2.setMovingRight(action);
 		});
 
 	screen.setKeyPress(GLFW_KEY_SPACE, [](bool action) -> void {
-		if (!action) return;
+		/*if (!action) return;
 
 		if (following == 1) {
 			following = 2;
@@ -103,11 +134,11 @@ int main() {
 		else {
 			following = 1;
 			camera.follow(&p1);
-		}
+		}*/
 		});
 
 	screen.setKeyPress(GLFW_KEY_F, [](bool action) -> void {
-		if (p1.isInRange(&p2)) p1.attemptToKill(&p2);
+		//if (p1.isInRange(&p2)) p1.attemptToKill(&p2);
 		});
 
 	

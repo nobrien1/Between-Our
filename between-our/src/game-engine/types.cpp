@@ -1,4 +1,5 @@
 #include "types.h"
+#include <math.h>
 
 namespace gameEngine {
 	/*template<typename T> Point<T>::Point() {
@@ -15,6 +16,14 @@ namespace gameEngine {
 
 	Pointf::Pointf(float x, float y) {
 		this->x = x, this->y = y;
+	}
+
+	PolarPointf::PolarPointf() {
+		r = 0, theta = 0;
+	}
+
+	PolarPointf::PolarPointf(float r, float theta) {
+		this->r = r, this->theta = theta;
 	}
 
 	Dimensionf::Dimensionf() {

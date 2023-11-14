@@ -11,6 +11,8 @@
 namespace gameEngine {
 	void World::checkCollision()
 	{
+		return;
+
 		for (int i = 0; i < worldObjectCount; i++) {
 			WorldObject* w1 = worldObjects[i];
 			BoundingBox w1Bounds = w1->getBoundingBox();
@@ -57,7 +59,7 @@ namespace gameEngine {
 		World(size.width, size.height);
 	}
 	World::World(float width, float height) : Sized(width, height) {
-		setTexture(new ColorSquare(Color3f(1, 1, 1)));
+		setTexture(new ColorSquare(Color3f(0, 0, 0)));
 	}
 
 	WorldObject** World::getWorldObjects() {

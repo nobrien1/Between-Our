@@ -12,6 +12,11 @@ namespace gameEngine {
         Pointf();
         Pointf(float x, float y);
     };
+    struct PolarPointf {
+        float r, theta;
+        PolarPointf();
+        PolarPointf(float r, float theta);
+    };
     struct Dimensionf {
         float width, height;
         Dimensionf();
