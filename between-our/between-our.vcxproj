@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\SerialPort.cpp" />
     <ClCompile Include="src\game-engine\AnimatedTexture.cpp" />
     <ClCompile Include="src\game-engine\Camera.cpp" />
     <ClCompile Include="src\game-engine\ColorSquare.cpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\SerialPort.h" />
     <ClInclude Include="src\game-engine\AnimatedTexture.h" />
     <ClInclude Include="src\game-engine\Camera.h" />
     <ClInclude Include="src\game-engine\ColorSquare.h" />
