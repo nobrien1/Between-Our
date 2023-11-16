@@ -1,6 +1,7 @@
 #include "SerialPort.h"
+#include <iostream>
 
-SerialPort::SerialPort(char* portName) {
+SerialPort::SerialPort(char* portName, DWORD baudRate) {
 	errors = 0;
 	status = { 0 };
 	connected = false;
@@ -30,7 +31,7 @@ SerialPort::SerialPort(char* portName) {
 		return;
 	}
 
-	dcbSerialParameters.BaudRate = CBR_115200;
+	dcbSerialParameters.BaudRate = baudRate;
 	dcbSerialParameters.ByteSize = 8;
 	dcbSerialParameters.StopBits = ONESTOPBIT;
 	dcbSerialParameters.Parity = NOPARITY;
@@ -44,4 +45,37 @@ SerialPort::SerialPort(char* portName) {
 	connected = true;
 	PurgeComm(handleToCOM, PURGE_RXCLEAR | PURGE_TXCLEAR);
 	Sleep(2000);
+}
+
+SerialPort::~SerialPort() {
+	if (!connected) return;
+	connected = false;
+	CloseHandle(handleToCOM);
+}
+
+bool SerialPort::isAvailable() {
+	ClearCommError(handleToCOM, &errors, &status);
+	//std::cout << status.cbInQue << std::endl;
+	return status.cbInQue > 0;
+}
+
+char* SerialPort::read() {
+	ClearCommError(handleToCOM, &errors, &status);
+
+	char buffer[1];
+	DWORD bytesRead;
+
+	if (ReadFile(handleToCOM, buffer, 1, &bytesRead, NULL)) {
+		//printf("Successfully read");
+		return buffer;
+	}
+	else {
+		//printf("Failed to read");
+		std::cout << GetLastError() << std::endl;
+		return NULL;
+	}
+}
+
+bool SerialPort::isConnected() {
+	return connected;
 }

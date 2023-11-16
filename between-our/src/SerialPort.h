@@ -15,10 +15,11 @@ private:
 	COMSTAT status;
 	DWORD errors;
 public:
-	SerialPort(char* portName);
+	SerialPort(char* portName, DWORD baudRate);
 	~SerialPort();
 
-	int readSerialPort(char* buffer, unsigned int size);
+	bool isAvailable();
+	char* read();
 
 	bool isConnected();
 };

@@ -8,9 +8,14 @@
 #include "game-engine/Player.h"
 #include "game-engine/ui/uiHeader.h"
 #include <string>
+#include "SerialPort.h"
 
 using namespace gameEngine::ui;
 using namespace gameEngine;
+
+char comPort[] = "COM3";
+char* port = comPort;
+SerialPort mySerial(port, CBR_115200);
 
 TextInput nameInput(Pointf(-1920 / 4 + 30, 1080 / 4 - 50), "Enter name");
 const char* nameInputVal = " ";
@@ -52,6 +57,37 @@ Pointf toPointf(PolarPointf p) {
 	return toPointf(p.r, p.theta);
 }
 
+void readSerial() {
+	if (!mySerial.isConnected() || !mySerial.isAvailable()) return;
+
+	char* buffer = mySerial.read();
+
+	if (buffer == nullptr) return;
+
+	char b = buffer[0];
+	std::cout << int(b) << std::endl;
+	if (b != 0xfa) return;
+
+	char data[4];
+	int i = 1;
+	data[0] = b;
+
+	while (i < 3) {
+		if (!mySerial.isAvailable()) continue;
+		char* temp = mySerial.read();
+		if (temp == nullptr) return;
+		data[i] = temp[0];
+		i++;
+	}
+
+	int index = int(data[1]) - 0xa0;
+	int mmDist = data[2] | (int(data[3] & 0x1f) << 8);
+
+	PolarPointf polar(mmDist, index * 4);
+	Pointf p = toPointf(polar);
+	points[index].setPosition(p);
+}
+
 int main() {
 	ViewStyle btnStyle;
 	btnStyle.bgColor = Color3f(0, 0, 1);
@@ -62,14 +98,11 @@ int main() {
 		window::navigate(&screen);
 
 		window::setRenderCallback([](double delta) -> void {
+			readSerial();
 			world.gameTick(delta);
 			camera.gameTick(delta);
 
-			for (int i = 0; i < 90; i++) {
-				int r = rand() % 10 - 5;
-				PolarPointf pp(100 + r, i * 4);
-				points[i].setPosition(toPointf(pp));
-			}
+			
 
 			/*if (p1.isInRange(&p2) && !p2.isDead()) {
 				canKill.setVisible(true);
@@ -95,7 +128,7 @@ int main() {
 	ColorSquare pointTexture(Color3f(1, 1, 1));
 
 	for (int i = 0; i < 90; i++) {
-		PolarPointf polar(i, i * 4);
+		PolarPointf polar(90, i * 4);
 		Pointf p = toPointf(polar);
 		points[i].setPosition(p);
 		points[i].setSize(2, 2);
