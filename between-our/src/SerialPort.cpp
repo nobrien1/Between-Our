@@ -16,7 +16,7 @@ SerialPort::SerialPort(char* portName, DWORD baudRate) {
 		return;
 	}
 	else if (errorMsg == 5) {
-		printf("Access denied, another device is currently using port.\n");
+		printf("Access denied, another program is currently using port.\n");
 		return;
 	}
 	else if (errorMsg != 0) {

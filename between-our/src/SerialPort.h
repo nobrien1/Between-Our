@@ -1,7 +1,7 @@
 #pragma once
 
-#define ARDUINO_WAIT_TIME = 2000
-#define INPUT_DATA_BYTES = 7
+#define ARDUINO_WAIT_TIME 2000
+#define INPUT_DATA_BYTES 7
 
 #include <windows.h>
 #include <stdio.h>

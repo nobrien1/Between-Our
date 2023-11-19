@@ -8,12 +8,15 @@
 #include "game-engine/Player.h"
 #include "game-engine/ui/uiHeader.h"
 #include <string>
+#include <future> 
+#include <mutex> 
+#include <chrono> 
 #include "SerialPort.h"
 
 using namespace gameEngine::ui;
 using namespace gameEngine;
 
-char comPort[] = "COM3";
+char comPort[] = "COM5";
 char* port = comPort;
 SerialPort mySerial(port, CBR_115200);
 
@@ -30,7 +33,8 @@ int following = 1;
 World world(500, 500);
 
 Player p1("");
-WorldObject points[90];
+#define NUM_POINTS 90
+WorldObject points[NUM_POINTS];
 
 GameScreen screen(&world, &camera);
 
@@ -64,28 +68,42 @@ void readSerial() {
 
 	if (buffer == nullptr) return;
 
-	char b = buffer[0];
-	std::cout << int(b) << std::endl;
+	unsigned char b = buffer[0];
 	if (b != 0xfa) return;
 
-	char data[4];
+	unsigned char data[4];
 	int i = 1;
 	data[0] = b;
 
-	while (i < 3) {
+	while (i < 4) {
 		if (!mySerial.isAvailable()) continue;
 		char* temp = mySerial.read();
 		if (temp == nullptr) return;
-		data[i] = temp[0];
+		data[i] = temp[0] + 256;
 		i++;
 	}
 
 	int index = int(data[1]) - 0xa0;
-	int mmDist = data[2] | (int(data[3] & 0x1f) << 8);
+	int mmDist = data[2] + ((data[3] & 0x1f) << 8) / 120;
+	std::cout << mmDist << std::endl;
 
 	PolarPointf polar(mmDist, index * 4);
 	Pointf p = toPointf(polar);
 	points[index].setPosition(p);
+}
+
+// 1010
+// 0110
+// 
+// 0010
+
+// 0000 0000
+// 0001 1111
+
+void loopSerial() {
+	while (true) {
+		readSerial();
+	}
 }
 
 int main() {
@@ -98,7 +116,7 @@ int main() {
 		window::navigate(&screen);
 
 		window::setRenderCallback([](double delta) -> void {
-			readSerial();
+			//readSerial();
 			world.gameTick(delta);
 			camera.gameTick(delta);
 
@@ -127,7 +145,7 @@ int main() {
 
 	ColorSquare pointTexture(Color3f(1, 1, 1));
 
-	for (int i = 0; i < 90; i++) {
+	for (int i = 0; i < NUM_POINTS; i++) {
 		PolarPointf polar(90, i * 4);
 		Pointf p = toPointf(polar);
 		points[i].setPosition(p);
@@ -184,7 +202,10 @@ int main() {
 
 	window::navigate(&initialScreen);
 
-	window::startWindow(1920/2, 1080/2);
+	//window::startWindow(1920/2, 1080/2);
+
+	std::future<void> thread0 = std::async(std::launch::async, window::startWindow, 1920 / 2, 1080 / 2);
+	std::future<void> thread1 = std::async(std::launch::async, loopSerial);
 
 	return 0;
 }

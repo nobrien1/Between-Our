@@ -36,21 +36,21 @@ namespace gameEngine{
 		if (position.x == x && position.y == y) return;
 
 		position.x = x, position.y = y;
-		onPositionChange();
+		//onPositionChange();
 	}
 
 	void Positioned::setPositionX(float x) {
 		if (position.x == x) return;
 
 		position.x = x;
-		onPositionChange();
+		//onPositionChange();
 	}
 
 	void Positioned::setPositionY(float y) {
 		if (position.y = y) return;
 
 		position.y = y;
-		onPositionChange();
+		//onPositionChange();
 	}
 
 	void Positioned::move(Dimensionf distance) {
