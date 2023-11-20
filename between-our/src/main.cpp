@@ -33,8 +33,9 @@ int following = 1;
 World world(500, 500);
 
 Player p1("");
-#define NUM_POINTS 90
+#define NUM_POINTS 360
 WorldObject points[NUM_POINTS];
+WorldObject center(0, 0);
 
 GameScreen screen(&world, &camera);
 
@@ -71,11 +72,11 @@ void readSerial() {
 	unsigned char b = buffer[0];
 	if (b != 0xfa) return;
 
-	unsigned char data[4];
+	unsigned char data[10];
 	int i = 1;
 	data[0] = b;
 
-	while (i < 4) {
+	while (i < 10) {
 		if (!mySerial.isAvailable()) continue;
 		char* temp = mySerial.read();
 		if (temp == nullptr) return;
@@ -84,21 +85,29 @@ void readSerial() {
 	}
 
 	int index = int(data[1]) - 0xa0;
-	int mmDist = data[2] + ((data[3] & 0x1f) << 8) / 120;
-	std::cout << mmDist << std::endl;
 
-	PolarPointf polar(mmDist, index * 4);
-	Pointf p = toPointf(polar);
-	points[index].setPosition(p);
+	for (int j = 0; j < 4; j++) {
+		int angle = index * 4 + j;
+		int lowDist = data[2 + 2 * j];
+		int highDist = data[3 + 2 * j];
+
+		if (highDist & 0xe0) {
+			points[angle].setPosition(0, 0);
+			std::cout << "Error!" << std::endl;
+			continue;
+		}
+
+		int dist = highDist & 0x1f;
+		dist <<= 8;
+		dist |= lowDist;
+		dist /= 20;
+		std::cout << dist << std::endl;
+
+		PolarPointf polar(dist, angle);
+		Pointf p = toPointf(polar);
+		points[angle].setPosition(p);
+	}
 }
-
-// 1010
-// 0110
-// 
-// 0010
-
-// 0000 0000
-// 0001 1111
 
 void loopSerial() {
 	while (true) {
@@ -144,15 +153,20 @@ int main() {
 	//world.addWorldObject(&p2);
 
 	ColorSquare pointTexture(Color3f(1, 1, 1));
+	ColorSquare centerTexture(Color3f(0, 0, 1));
 
 	for (int i = 0; i < NUM_POINTS; i++) {
-		PolarPointf polar(90, i * 4);
+		PolarPointf polar(0, i);
 		Pointf p = toPointf(polar);
 		points[i].setPosition(p);
 		points[i].setSize(2, 2);
 		points[i].setTexture(&pointTexture);
 		world.addWorldObject(&(points[i]));
 	}
+
+	center.setSize(4, 4);
+	center.setTexture(&centerTexture);
+	world.addWorldObject(&center);
 
 	camera.follow(&p1);
 
