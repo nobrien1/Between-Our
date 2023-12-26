@@ -13,7 +13,11 @@ namespace gameEngine {
 
 	Pointf Camera::transformPoint(Pointf p)
 	{
-		return Pointf(p.x - position.x, p.y - position.y);
+		return Pointf((p.x - position.x) * scale, (p.y - position.y) * scale);
+	}
+
+	Dimensionf Camera::transformDimension(Dimensionf d) {
+		return Dimensionf(d.width * scale, d.height * scale);
 	}
 
 	Camera::Camera() {}
@@ -36,13 +40,13 @@ namespace gameEngine {
 		window::clear(Color3f(0, 0, 0));
 
 		Texture* worldTexture = world->getTexture();
-		worldTexture->draw(transformPoint(Pointf(0, 0)), world->getSize());
+		worldTexture->draw(transformPoint(Pointf(0, 0)), transformDimension(world->getSize()));
 
 		WorldObject** worldObjects = world->getWorldObjects();
 		for (int i = 0; i < world->getWorldObjectCount(); i++) {
 			WorldObject* worldObj = worldObjects[i];
 			Pointf pos = worldObj->getPosition();
-			worldObj->getTexture()->draw(transformPoint(pos), worldObj->getSize());
+			worldObj->getTexture()->draw(transformPoint(pos), transformDimension(worldObj->getSize()));
 		}
 		for (int i = 0; i < world->getWorldObjectCount(); i++) {
 			WorldObject* worldObj = worldObjects[i];
@@ -54,11 +58,19 @@ namespace gameEngine {
 	}
 
 	void Camera::gameTick(double delta) {
-		if (toFollow == NULL) return;
+		if (toFollow == NULL || toFollow == nullptr) return;
 
 		float dx = toFollow->getPosition().x - position.x;
 		float dy = toFollow->getPosition().y - position.y;
 		move(dx * followSpeed * delta, dy * followSpeed * delta);
+
+		if (zoomingIn) {
+			scale *= 1 + 1 * delta * ZOOM_SPEED;
+		}
+
+		if (zoomingOut) {
+			scale /= 1 + 1 * delta * ZOOM_SPEED;
+		}
 	}
 
 	void Camera::follow(Positioned* p) {
@@ -72,5 +84,20 @@ namespace gameEngine {
 	void Camera::setFollowSpeed(float f) {
 		followSpeed = f;
 	}
-}
 
+	void Camera::setScale(float s) {
+		scale = s;
+	}
+
+	float Camera::getScale() {
+		return scale;
+	}
+
+	void Camera::setZoomingIn(bool z) {
+		zoomingIn = z;
+	}
+
+	void Camera::setZoomingOut(bool z) {
+		zoomingOut = z;
+	}
+}

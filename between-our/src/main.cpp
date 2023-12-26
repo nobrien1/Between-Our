@@ -13,6 +13,9 @@
 #include <chrono> 
 #include "SerialPort.h"
 
+#define PACKET_LENGTH 22
+#define STEP 0.1
+
 using namespace gameEngine::ui;
 using namespace gameEngine;
 
@@ -35,11 +38,16 @@ World world(500, 500);
 Player p1("");
 #define NUM_POINTS 360
 WorldObject points[NUM_POINTS];
-WorldObject center(0, 0);
+ColorSquare pointColors[NUM_POINTS];
+
+int distances[NUM_POINTS];
 
 GameScreen screen(&world, &camera);
 
 Text canKill(Pointf(-1920/4 + 30, 1080/4 - 40), "Kill (f)");
+
+#define NUM_THREADS 2
+std::future<void> threads[NUM_THREADS];
 
 PolarPointf toPolarPointf(float x, float y) {
 	float r = sqrt(x * x + y * y);
@@ -62,6 +70,35 @@ Pointf toPointf(PolarPointf p) {
 	return toPointf(p.r, p.theta);
 }
 
+void processFrame(int distances[NUM_POINTS]) {
+	std::cout << "Processing frame" << std::endl;
+	Pointf p[NUM_POINTS];
+	int tempIndex = 0;
+	float dydx = 0.0;
+	for (int i = 0; i < NUM_POINTS; i++) {
+		std::cout << i << std::endl;
+		PolarPointf polar(distances[i], i);
+		p[i] = toPointf(polar);
+
+		if (i == 0) continue;
+
+		float temp = (p[i - 1].y - p[i].y) / (p[i - 1].x - p[i].x);
+
+		if (abs(dydx - temp) > 5) {
+			if (i - tempIndex > 3) {
+				for (int j = tempIndex; j < i; j++) {
+					p[i] = Pointf(0, 0);
+				}
+			}
+			tempIndex = i;
+		}
+
+		dydx = temp;
+
+		points[i].setPosition(p[i]);
+	}
+}
+
 void readSerial() {
 	if (!mySerial.isConnected() || !mySerial.isAvailable()) return;
 
@@ -72,11 +109,11 @@ void readSerial() {
 	unsigned char b = buffer[0];
 	if (b != 0xfa) return;
 
-	unsigned char data[10];
+	unsigned char data[PACKET_LENGTH];
 	int i = 1;
 	data[0] = b;
 
-	while (i < 10) {
+	while (i < PACKET_LENGTH) {
 		if (!mySerial.isAvailable()) continue;
 		char* temp = mySerial.read();
 		if (temp == nullptr) return;
@@ -86,10 +123,16 @@ void readSerial() {
 
 	int index = int(data[1]) - 0xa0;
 
+	/*if (index == 0) {
+		threads[2] = std::async(std::launch::async, processFrame, distances);
+	}*/
+
 	for (int j = 0; j < 4; j++) {
 		int angle = index * 4 + j;
-		int lowDist = data[2 + 2 * j];
-		int highDist = data[3 + 2 * j];
+		int lowDist = data[4 + 4 * j];
+		int highDist = data[5 + 4 * j];
+		int lowQuality = data[6 + 4 * j];
+		int highQuality = data[7 + 4 * j];
 
 		if (highDist & 0xe0) {
 			points[angle].setPosition(0, 0);
@@ -100,12 +143,37 @@ void readSerial() {
 		int dist = highDist & 0x1f;
 		dist <<= 8;
 		dist |= lowDist;
-		dist /= 20;
-		std::cout << dist << std::endl;
+		//dist /= 20;
+
+		int quality = highQuality;
+		quality <<= 8;
+		quality |= lowQuality;
+		quality /= 2;
+
+		float r, g;
+
+		if (quality < 256) {
+			g = quality;
+			r = 256;
+		}
+		else {
+			r = 256 - (quality - 256);
+			g = 256;
+		}
+
+		r /= 256.0;
+		g /= 256.0;
+		
+		std::cout << "angle: " << angle << ", distance: " << dist << ", quality: " << quality * 128 << std::endl;
+		//distances[angle] = dist;
 
 		PolarPointf polar(dist, angle);
 		Pointf p = toPointf(polar);
 		points[angle].setPosition(p);
+		
+		/*ColorSquare c(Color3f(r, g, 0));
+		points[angle].setTexture(&c);*/
+		pointColors[angle].setColor(Color3f(r, g, 0));
 	}
 }
 
@@ -152,21 +220,15 @@ int main() {
 	world.addWorldObject(&p1);
 	//world.addWorldObject(&p2);
 
-	ColorSquare pointTexture(Color3f(1, 1, 1));
-	ColorSquare centerTexture(Color3f(0, 0, 1));
-
 	for (int i = 0; i < NUM_POINTS; i++) {
 		PolarPointf polar(0, i);
 		Pointf p = toPointf(polar);
 		points[i].setPosition(p);
-		points[i].setSize(2, 2);
-		points[i].setTexture(&pointTexture);
+		points[i].setSize(30, 30);
+		pointColors[i].setColor(Color3f(1, 1, 1));
+		points[i].setTexture(&pointColors[i]);
 		world.addWorldObject(&(points[i]));
 	}
-
-	center.setSize(4, 4);
-	center.setTexture(&centerTexture);
-	world.addWorldObject(&center);
 
 	camera.follow(&p1);
 
@@ -184,12 +246,14 @@ int main() {
 	});
 
 	screen.setKeyPress(GLFW_KEY_UP, [](bool action) -> void {
+		camera.setZoomingIn(action);
 		// p2.setMovingUp(action);
 		});
 	screen.setKeyPress(GLFW_KEY_LEFT, [](bool action) -> void {
 		// p2.setMovingLeft(action);
 		});
 	screen.setKeyPress(GLFW_KEY_DOWN, [](bool action) -> void {
+		camera.setZoomingOut(action);
 		// p2.setMovingDown(action);
 		});
 	screen.setKeyPress(GLFW_KEY_RIGHT, [](bool action) -> void {
@@ -218,8 +282,8 @@ int main() {
 
 	//window::startWindow(1920/2, 1080/2);
 
-	std::future<void> thread0 = std::async(std::launch::async, window::startWindow, 1920 / 2, 1080 / 2);
-	std::future<void> thread1 = std::async(std::launch::async, loopSerial);
+	threads[0] = std::async(std::launch::async, window::startWindow, 1920 / 2, 1080 / 2);
+	threads[1] = std::async(std::launch::async, loopSerial);
 
 	return 0;
 }
