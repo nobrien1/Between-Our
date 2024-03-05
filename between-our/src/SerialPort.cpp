@@ -1,5 +1,5 @@
 #include "SerialPort.h"
-#include <iostream>
+#include <iostream>z
 
 SerialPort::SerialPort(char* portName, DWORD baudRate) {
 	errors = 0;
